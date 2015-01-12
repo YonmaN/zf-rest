@@ -11,6 +11,7 @@ use Zend\EventManager\EventManager;
 use Zend\Stdlib\Parameters;
 use ZF\Rest\Resource;
 use ZF\Rest\ResourceEvent;
+use ZF\Rest\PluginManager;
 
 /**
  * @subpackage UnitTest
@@ -131,15 +132,15 @@ class AbstractResourceListenerTest extends TestCase
     public function testPluginManagerComposesController()
     {
         $plugins    = $this->listener->getPluginManager();
-        $resourceListener = $plugins->getResrouceListener();
+        $resourceListener = $plugins->getResourceListener();
         $this->assertSame($this->listener, $resourceListener);
     }
     public function testInjectingPluginManagerSetsResourceListenerWhenPossible()
     {
         $plugins = new PluginManager();
-        $this->assertNull($plugins->getResrouceListener());
+        $this->assertNull($plugins->getResourceListener());
         $this->listener->setPluginManager($plugins);
-        $this->assertSame($this->listener, $plugins->getResrouceListener());
+        $this->assertSame($this->listener, $plugins->getResourceListener());
         $this->assertSame($plugins, $this->listener->getPluginManager());
     }
 }
