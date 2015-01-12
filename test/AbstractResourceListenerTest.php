@@ -117,4 +117,29 @@ class AbstractResourceListenerTest extends TestCase
 
         $this->assertEquals($queryParams, $this->listener->testCase->paramsPassedToListener);
     }
+	
+	
+	public function testResourceListenerIsPluggable()
+    {
+        $this->assertTrue(method_exists($this->listener, 'plugin'));
+    }
+    public function testComposesPluginManagerByDefault()
+    {
+        $plugins = $this->listener->getPluginManager();
+        $this->assertInstanceOf('ZF\Rest\PluginManager', $plugins);
+    }
+    public function testPluginManagerComposesController()
+    {
+        $plugins    = $this->listener->getPluginManager();
+        $resourceListener = $plugins->getResrouceListener();
+        $this->assertSame($this->listener, $resourceListener);
+    }
+    public function testInjectingPluginManagerSetsResourceListenerWhenPossible()
+    {
+        $plugins = new PluginManager();
+        $this->assertNull($plugins->getResrouceListener());
+        $this->listener->setPluginManager($plugins);
+        $this->assertSame($this->listener, $plugins->getResrouceListener());
+        $this->assertSame($plugins, $this->listener->getPluginManager());
+    }
 }
