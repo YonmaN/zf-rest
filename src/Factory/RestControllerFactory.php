@@ -16,6 +16,10 @@ use Zend\ServiceManager\AbstractFactoryInterface;
 use Zend\ServiceManager\Exception\ServiceNotCreatedException;
 use Zend\ServiceManager\Exception\ServiceNotFoundException;
 use Zend\ServiceManager\ServiceLocatorInterface;
+use ZF\Rest\PluginManager;
+use ZF\Rest\AbstractResourceListener;
+use Zend\ServiceManager\Config;
+
 
 /**
  * Class RestControllerFactory
@@ -121,6 +125,18 @@ class RestControllerFactory implements AbstractFactoryInterface
             }
             $resourceIdentifiers = array_merge($resourceIdentifiers, $config['resource_identifiers']);
         }
+
+		if ($listener instanceof AbstractResourceListener || method_exists($listener, 'setPluginManager')) {
+			$pluginsConfig = $services->get('Config');
+			if (isset($pluginsConfig['zf-rest']['resource-plugins'])) {
+				$pluginsConfig = new Config($pluginsConfig['zf-rest']['resource-plugins']);
+			} else {
+				$pluginsConfig = new Config();
+			}
+			$plugins = new PluginManager($pluginsConfig);
+			$plugins->setServiceLocator($services);
+			$listener->setPluginManager($plugins);
+		}
 
         $events = $services->get('EventManager');
         $events->attach($listener);

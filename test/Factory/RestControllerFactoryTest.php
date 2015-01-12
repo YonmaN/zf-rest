@@ -7,9 +7,12 @@
 namespace ZFTest\Rest\Factory;
 
 use ZF\Rest\Factory\RestControllerFactory;
+use ZF\Rest\PluginManager;
 use PHPUnit_Framework_TestCase as TestCase;
 use Zend\Mvc\Controller\ControllerManager;
 use Zend\ServiceManager\ServiceManager;
+use ZFTest\Rest\TestAsset\TestResourceListener;
+use ZFTest\Rest\Plugin\TestAsset\SamplePlugin;
 
 class RestControllerFactoryTest extends TestCase
 {
@@ -42,6 +45,38 @@ class RestControllerFactoryTest extends TestCase
             ),
         );
     }
+
+	public function testFactoryInsertsPluginManagerIntoListener() {
+		$listener = new TestResourceListener($this);
+		$this->services->setService('ApiListener', $listener);
+		$config = $this->services->get('Config');
+        $config['zf-rest']['ApiController']['listener'] = 'ApiListener';
+		$this->services->setAllowOverride(true);
+        $this->services->setService('Config', $config);
+		$this->factory->createServiceWithName($this->controllers, 'ApiController', 'ApiController');
+
+		$this->assertInstanceof ('ZF\Rest\PluginManager', $listener->getPluginManager());
+		$this->assertInstanceof ('Zend\ServiceManager\ServiceManager', $listener->getPluginManager()->getServiceLocator());
+		
+	}
+	
+	public function testFactoryInsertsPluginManagerWithServiceConfigurationIntoListener() {
+		$listener = new TestResourceListener($this);
+		$this->services->setService('ApiListener', $listener);
+		$config = $this->services->get('Config');
+        $config['zf-rest']['ApiController']['listener'] = 'ApiListener';
+		$config['zf-rest']['resource-plugins'] = array(
+			'invokables' => array(
+				'plugin' => 'ZFTest\Rest\Plugin\TestAsset\SamplePlugin'
+			),
+		);
+		$this->services->setAllowOverride(true);
+        $this->services->setService('Config', $config);
+		$this->factory->createServiceWithName($this->controllers, 'ApiController', 'ApiController');
+		
+		$this->assertInstanceof('ZFTest\Rest\Plugin\TestAsset\SamplePlugin', $listener->plugin('plugin'));
+		
+	}
 
     public function testWillInstantiateListenerIfServiceNotFoundButClassExists()
     {
